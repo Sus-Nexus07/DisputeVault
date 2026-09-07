@@ -1,0 +1,129 @@
+pragma language_version 0.23;
+
+import CompactStandardLibrary;
+
+// ============================================================================
+// DisputeVault — privacy-preserving dispute and claims infrastructure.
+//
+// Public state holds only commitments, encrypted envelopes, ids and status.
+// Raw evidence is a private witness and never touches the ledger.
+//
+// Authorization follows the official Midnight hash-based authentication
+// pattern (docs/compact/smart-contract-security): the admin secret arrives
+// through a witness, its derived "public key" is computed inside the circuit,
+// and the circuit asserts it matches the authority bound at deployment.
+// ownPublicKey() is deliberately NOT used (it is an untrusted witness).
+// ============================================================================
+
+export enum DisputeStatus {
+  SUBMITTED,
+  VERDICT_POSTED
+}
+
+export struct Dispute {
+  evidence_commitment: Bytes<32>,
+  envelope: Bytes<284>,
+  verdict_commitment: Bytes<32>,
+  status: DisputeStatus
+}
+
+// --- Public state -----------------------------------------------------------
+
+// Admin authority: persistentHash of the admin secret, bound at deployment.
+// No circuit writes this after deployment.
+export ledger admin_authority: Bytes<32>;
+
+// Platform evidence-encryption public key (uncompressed P-256 point).
+// Written exactly once by register_platform.
+export ledger platform_enc_key: Bytes<65>;
+
+// Monotonic dispute id allocator. Ids start at 1.
+export ledger dispute_counter: Counter;
+
+// dispute_id -> dispute record.
+export ledger disputes: Map<Uint<64>, Dispute>;
+
+// --- Deployment -------------------------------------------------------------
+
+constructor(admin_secret: Bytes<32>) {
+  admin_authority = disclose(adminPk(admin_secret));
+  // platform_enc_key stays at its default (all zeros) = "not registered".
+  // dispute_counter starts at 0; first submit_dispute increments it to 1.
+  // disputes map starts empty.
+}
+
+// --- Authorization ----------------------------------------------------------
+
+// Domain-separated derivation of the admin authority from the secret.
+// Kept as an internal circuit so both entry points share one definition.
+circuit adminPk(sk: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<2, Bytes<32>>>([pad(32, "disputevault:admin:pk"), sk]);
+}
+
+// The admin secret is provided by the DApp/worker as a witness result.
+// Its value never becomes public; only its hash is compared in-circuit.
+witness adminSecret(): Bytes<32>;
+
+// --- register_platform ------------------------------------------------------
+
+// One-time registration of the platform evidence-encryption public key.
+// - Requires admin authorization.
+// - Rejects any attempt to replace an already-registered key.
+export circuit register_platform(platform_public_key: Bytes<65>): [] {
+  const sk = adminSecret();
+  assert(adminPk(sk) == admin_authority, "register_platform: unauthorized");
+
+  // Default Bytes<65> is all zeros; treat that as "not yet registered".
+  const zero65: Bytes<65> = pad(65, "");
+  assert(platform_enc_key == zero65, "register_platform: platform key already registered");
+
+  platform_enc_key = disclose(platform_public_key);
+}
+
+// --- submit_dispute ---------------------------------------------------------
+
+// Submit a dispute:
+//   private witness : evidence_wire  (the full 256-byte DV1E wire; the
+//                                     canonical manifest never leaves the
+//                                     claimant's proof)
+//   public          : envelope       (284-byte encrypted evidence envelope)
+//
+// The circuit computes the evidence commitment over the private wire, so the
+// proof binds the published commitment to the claimant's actual evidence.
+// A fresh dispute id is allocated from the counter; existing disputes can
+// never be overwritten.
+export circuit submit_dispute(evidence_wire: Bytes<256>, envelope: Bytes<284>): Uint<64> {
+  dispute_counter.increment(1);
+  const dispute_id = dispute_counter.read() as Uint<64>;
+
+  const commitment = disclose(persistentHash<Bytes<256>>(evidence_wire));
+  const record = Dispute { evidence_commitment: commitment, envelope: disclose(envelope), verdict_commitment: pad(32, ""), status: DisputeStatus.SUBMITTED };
+  disputes.insert(dispute_id, record);
+
+  return disclose(dispute_id);
+}
+
+// --- post_verdict -----------------------------------------------------------
+
+// Publish the verdict commitment for an existing dispute:
+//   - requires admin authorization,
+//   - requires the dispute to exist,
+//   - requires no verdict posted yet,
+//   - commits the persistent hash over the private 192-byte DV1V verdict wire.
+//
+// The verdict payload's dispute_id binding (payload vs outer id) is enforced
+// off-chain by the worker/gateway/verifier — see docs/PROTOCOL.md section 7.
+export circuit post_verdict(dispute_id: Uint<64>, verdict_wire: Bytes<192>): [] {
+  const sk = adminSecret();
+  assert(adminPk(sk) == admin_authority, "post_verdict: unauthorized");
+
+  const id = disclose(dispute_id);
+  assert(disputes.member(id), "post_verdict: dispute does not exist");
+
+  const record = disputes.lookup(id);
+  assert(record.status == DisputeStatus.SUBMITTED, "post_verdict: verdict already posted");
+
+  const commitment = disclose(persistentHash<Bytes<192>>(verdict_wire));
+  const updated = Dispute { evidence_commitment: record.evidence_commitment, envelope: record.envelope, verdict_commitment: commitment, status: DisputeStatus.VERDICT_POSTED };
+  disputes.insert(id, updated);
+}

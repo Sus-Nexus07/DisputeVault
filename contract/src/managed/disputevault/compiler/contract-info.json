@@ -1,0 +1,166 @@
+{
+  "compiler-version": "0.31.1",
+  "language-version": "0.23.0",
+  "runtime-version": "0.16.0",
+  "circuits": [
+    {
+      "name": "register_platform",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "platform_public_key",
+          "type": {
+            "type-name": "Bytes",
+            "length": 65
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "submit_dispute",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "evidence_wire",
+          "type": {
+            "type-name": "Bytes",
+            "length": 256
+          }
+        },
+        {
+          "name": "envelope",
+          "type": {
+            "type-name": "Bytes",
+            "length": 284
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Uint",
+        "maxval": 18446744073709551615
+      }
+    },
+    {
+      "name": "post_verdict",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "dispute_id",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          }
+        },
+        {
+          "name": "verdict_wire",
+          "type": {
+            "type-name": "Bytes",
+            "length": 192
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    }
+  ],
+  "witnesses": [
+    {
+      "name": "adminSecret",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    }
+  ],
+  "contracts": [
+  ],
+  "ledger": [
+    {
+      "name": "admin_authority",
+      "index": 0,
+      "exported": true,
+      "storage": "Cell",
+      "type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "platform_enc_key",
+      "index": 1,
+      "exported": true,
+      "storage": "Cell",
+      "type": {
+        "type-name": "Bytes",
+        "length": 65
+      }
+    },
+    {
+      "name": "dispute_counter",
+      "index": 2,
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "disputes",
+      "index": 3,
+      "exported": true,
+      "storage": "Map",
+      "key": {
+        "type-name": "Uint",
+        "maxval": 18446744073709551615
+      },
+      "value": {
+        "type-name": "Struct",
+        "name": "Dispute",
+        "elements": [
+          {
+            "name": "evidence_commitment",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          },
+          {
+            "name": "envelope",
+            "type": {
+              "type-name": "Bytes",
+              "length": 284
+            }
+          },
+          {
+            "name": "verdict_commitment",
+            "type": {
+              "type-name": "Bytes",
+              "length": 32
+            }
+          },
+          {
+            "name": "status",
+            "type": {
+              "type-name": "Enum",
+              "name": "DisputeStatus",
+              "elements": [
+                "SUBMITTED",
+                "VERDICT_POSTED"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -76,7 +76,7 @@ DisputeVault/
 │   └── src/
 │       ├── canonical.ts     canonical JSON serializer (evidence + verdict)
 │       ├── wire.ts          DV1E/DV1V wire framing + size limits
-│       ├── crypto.ts        keccak256 commitments + ECDH/AES-GCM envelope
+│       ├── crypto.ts        SHA-256 commitments + ECDH/AES-GCM envelope
 │       ├── keys.ts          P-256 keypair generation/serialization
 │       └── index.ts
 │

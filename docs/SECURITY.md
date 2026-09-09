@@ -86,13 +86,50 @@ It is an operator key and must be protected like production infrastructure
 | Fake verdict (2) | Unauthorized account posts a verdict | In-circuit admin proof; no admin secret → no valid proof → tx rejected |
 | Nonexistent dispute (3) | `post_verdict(dispute_id=999999)` | `disputes.member(id)` assert |
 | Duplicate verdict (4) | Two verdicts for one dispute | `status == SUBMITTED` assert; status flips to `VERDICT_POSTED` in the same circuit |
-| Verdict/dispute mismatch (6) | Outer id 42, payload says 99 | Off-chain binding rule enforced by worker/gateway/verifier (circuit cannot parse JSON); documented in PROTOCOL §7 |
+| Verdict/dispute mismatch (6) | Outer id 42, payload says 99 | **NOT enforced by the contract.** Enforced off-chain, by the SDK, before the circuit is ever invoked - see §5.1 (Wave-1 trust assumption) |
+
+### 5.1 Wave-1 trust assumption: verdict/dispute binding (Attack 6)
+
+**Named Wave-1 trust assumption, not an implementation detail.** The
+boundaries of Attack 6 are:
+
+- The Compact contract does **not** enforce that a verdict's embedded
+  `dispute_id` matches the `dispute_id` parameter of the dispute against
+  which `post_verdict` is called.
+- The circuit cannot parse the verdict's canonical JSON payload and therefore
+  cannot inspect the embedded `dispute_id` on-chain.
+- The contract therefore cannot independently enforce this particular binding
+  invariant in Wave 1.
+- The binding check is instead enforced **off-chain by the SDK**
+  (`sdk/src/publish.ts`): `publishVerdict` canonicalizes and validates the
+  payload, extracts its embedded `dispute_id`, compares it against the target
+  dispute id, and **rejects the operation before the contract's `post_verdict`
+  circuit is ever called**. A mismatched payload never reaches the contract
+  layer; SDK tests prove the circuit is not invoked on mismatch.
+- Consequence (the trust being placed): any component that bypasses the SDK
+  and calls the `post_verdict` circuit directly - with the admin secret -
+  could commit a verdict payload whose embedded `dispute_id` differs from the
+  dispute id it is attached to. The commitment itself remains tamper-evident
+  and re-hashable, but its attachment to a dispute id would then be
+  attacker-chosen. Mitigating controls: the admin secret is an operator key
+  (§8), and every legitimate path (worker, gateway, verification UI) goes
+  through the SDK check.
+
+This is a deliberate Wave-1 trust boundary. Wave-2 options for closing it are
+in-circuit canonical-JSON parsing or an on-chain commitment-to-id map; both
+are protocol changes and are **not** part of Wave 1.
 
 **Defense in depth for (6):** the worker derives `dispute_id` for the verdict
 payload from the dispute record it fetched - the caller-supplied id is never
 trusted - and the gateway re-checks the binding before constructing the
 transaction. Verification UI also checks it, so a mismatched commitment can
 never be presented as valid.
+
+**Tests:** `sdk/test/publish.test.ts` - a mismatched payload is rejected by
+the SDK and the contract `post_verdict` circuit is **not called**; a
+correctly bound payload proceeds to the contract-call layer.
+`contract/src/test/security.test.ts` - "Attack 6" pins the publisher rule
+from the contract side.
 
 ---
 

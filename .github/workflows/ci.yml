@@ -1,0 +1,89 @@
+# DisputeVault CI - lightweight: run each workspace's existing checks on
+# every push to master and on PRs targeting master. No deployment automation,
+# no build matrix, no caching optimization. Anything that passes locally
+# (contract: vitest + tsc; sdk: vitest + tsc + build; worker: go build/vet/
+# test + gofmt) must pass here or the build is red.
+#
+# Contract job note: the pinned Compact toolchain is installed from the
+# official installer (README "Getting Started"), then pinned to the exact
+# compiler version the contract was built with (contract-info.json:
+# language 0.23.0, runtime 0.16.0; see docs/DEVIATIONS.md). Do not bump
+# COMPACT_VERSION casually - regenerated artifacts must stay bit-for-bit
+# reproducible, which the vitest suite verifies.
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  contract:
+    name: contract (compact + vitest + tsc)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contract
+    env:
+      COMPACT_VERSION: "0.31.1"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Install pinned Compact toolchain
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf \
+            "https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh" | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Pin Compact to $COMPACT_VERSION
+        run: compact update "$COMPACT_VERSION"
+      - name: Show toolchain versions
+        run: compact --version && compact list | head -5 && node --version
+      - run: npm ci
+      - name: Compile contract (artifacts must reproduce committed output)
+        run: npm run compact
+      - name: Fail on regenerated-artifact drift
+        run: git diff --exit-code -- src/managed
+      - run: npx vitest run
+      - run: npx tsc --noEmit
+
+  sdk:
+    name: sdk (vitest + tsc + build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sdk
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npx vitest run
+      - run: npx tsc --noEmit
+      - run: npm run build
+
+  worker:
+    name: worker (go build + vet + test + gofmt)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: worker/go.mod
+      - run: go build ./...
+      - run: go vet ./...
+      - run: go test ./...
+      - name: gofmt (fail if any file is unformatted)
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "gofmt needed on:" >&2
+            echo "$unformatted" >&2
+            exit 1
+          fi

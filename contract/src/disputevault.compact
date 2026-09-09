@@ -97,7 +97,10 @@ export circuit submit_dispute(evidence_wire: Bytes<256>, envelope: Bytes<284>): 
   const dispute_id = dispute_counter.read() as Uint<64>;
 
   const commitment = disclose(persistentHash<Bytes<256>>(evidence_wire));
-  const record = Dispute { evidence_commitment: commitment, envelope: disclose(envelope), verdict_commitment: pad(32, ""), status: DisputeStatus.SUBMITTED };
+  const record = Dispute { evidence_commitment: commitment,
+                           envelope: disclose(envelope),
+                           verdict_commitment: pad(32, ""),
+                           status: DisputeStatus.SUBMITTED };
   disputes.insert(dispute_id, record);
 
   return disclose(dispute_id);
@@ -124,6 +127,9 @@ export circuit post_verdict(dispute_id: Uint<64>, verdict_wire: Bytes<192>): [] 
   assert(record.status == DisputeStatus.SUBMITTED, "post_verdict: verdict already posted");
 
   const commitment = disclose(persistentHash<Bytes<192>>(verdict_wire));
-  const updated = Dispute { evidence_commitment: record.evidence_commitment, envelope: record.envelope, verdict_commitment: commitment, status: DisputeStatus.VERDICT_POSTED };
+  const updated = Dispute { evidence_commitment: record.evidence_commitment,
+                            envelope: record.envelope,
+                            verdict_commitment: commitment,
+                            status: DisputeStatus.VERDICT_POSTED };
   disputes.insert(id, updated);
 }

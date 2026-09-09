@@ -1,0 +1,23 @@
+{
+  "name": "@disputevault/contract",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DisputeVault Compact contract (disputevault.compact) + simulator tests",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "compact": "compact compile ./src/disputevault.compact ./src/managed/disputevault",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@midnight-ntwrk/compact-runtime": "0.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

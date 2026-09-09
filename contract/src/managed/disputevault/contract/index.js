@@ -190,21 +190,21 @@ export class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.currentQueryContext != undefined)) {
           __compactRuntime.typeError('post_verdict',
                                      'argument 1 (as invoked from Typescript)',
-                                     'disputevault.compact line 116 char 1',
+                                     'disputevault.compact line 119 char 1',
                                      'CircuitContext',
                                      contextOrig_0)
         }
         if (!(typeof(dispute_id_0) === 'bigint' && dispute_id_0 >= 0n && dispute_id_0 <= 18446744073709551615n)) {
           __compactRuntime.typeError('post_verdict',
                                      'argument 1 (argument 2 as invoked from Typescript)',
-                                     'disputevault.compact line 116 char 1',
+                                     'disputevault.compact line 119 char 1',
                                      'Uint<0..18446744073709551616>',
                                      dispute_id_0)
         }
         if (!(verdict_wire_0.buffer instanceof ArrayBuffer && verdict_wire_0.BYTES_PER_ELEMENT === 1 && verdict_wire_0.length === 192)) {
           __compactRuntime.typeError('post_verdict',
                                      'argument 2 (argument 3 as invoked from Typescript)',
-                                     'disputevault.compact line 116 char 1',
+                                     'disputevault.compact line 119 char 1',
                                      'Bytes<192>',
                                      verdict_wire_0)
         }

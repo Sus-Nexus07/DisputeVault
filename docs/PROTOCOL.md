@@ -463,7 +463,7 @@ except the ephemeral key, which is derived deterministically for testing
 only:
 
 ```
-platform_private_key (hex, TEST VECTOR ONLY — never use in production):
+platform_private_key (hex, TEST VECTOR ONLY - never use in production):
   2b7e151628aed2a6abf7158809cf4f3c762e7160f38b4da56a784d9045190cfe
 platform_public_key = P-256 uncompressed point of the above (65 bytes)
 ephemeral_private_key (hex, TEST VECTOR ONLY):

@@ -271,10 +271,13 @@ Example canonical verdict (≈ 142 bytes):
 ```
 
 **Binding rule (mandatory):** `verdict.dispute_id` MUST equal the dispute id
-supplied to `post_verdict`. The circuit cannot parse JSON, so this rule is
-enforced by every off-chain component that publishes or verifies (worker,
-gateway, verification UI) and by the contract tests. A mismatched payload is
-rejected before it can be committed.
+supplied to `post_verdict`. The circuit cannot parse JSON, so the contract
+**cannot** enforce this rule itself; it is enforced off-chain, primarily by
+the SDK (`publishVerdict` rejects a mismatched payload before the contract's
+`post_verdict` circuit is ever called - see SECURITY.md §5.1), and
+defense-in-depth by every other component that publishes or verifies (worker,
+gateway, verification UI). A mismatched payload never reaches the contract
+call. This is a documented Wave-1 trust boundary, not a contract guarantee.
 
 The long-form human-readable LLM explanation is **not** part of the
 commitment. It stays off-chain with the verdict payload.

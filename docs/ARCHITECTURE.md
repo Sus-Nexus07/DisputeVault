@@ -78,6 +78,10 @@ DisputeVault/
 │       ├── wire.ts          DV1E/DV1V wire framing + size limits
 │       ├── crypto.ts        SHA-256 commitments + ECDH/AES-GCM envelope
 │       ├── keys.ts          P-256 keypair generation/serialization
+│       ├── publish.ts       verdict publishing with the OFF-CHAIN verdict/
+│       │                    dispute binding check (SECURITY.md §5.1): a
+│       │                    mismatched payload is rejected before the
+│       │                    contract's post_verdict circuit is ever called
 │       └── index.ts
 │
 ├── gateway/             TS service: the ONLY component that talks to Midnight

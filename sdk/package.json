@@ -1,0 +1,25 @@
+{
+  "name": "@disputevault/sdk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DisputeVault shared TS library: canonical JSON, DV1E/DV1V wire format, SHA-256 commitments, P-256/ECDH+AES-GCM evidence envelope, verdict publishing with the off-chain dispute-binding check",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@midnight-ntwrk/compact-runtime": "0.16.0",
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

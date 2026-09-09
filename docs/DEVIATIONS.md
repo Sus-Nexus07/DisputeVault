@@ -104,14 +104,19 @@ escalated to `needs_human_review`. See SECURITY.md §6.
 
 **What:** `post_verdict` takes the outer `dispute_id` and the private verdict
 wire, but the circuit cannot parse JSON, so it cannot check that the payload's
-`dispute_id` field equals the outer id.
+`dispute_id` field equals the outer id. The binding check is therefore
+implemented in the SDK: `publishVerdict` rejects a mismatched payload before
+any contract interaction (see SECURITY.md §5.1 for the Wave-1 trust boundary
+this represents).
 
 **Why:** Compact has no JSON parsing in-circuit; moving canonical JSON into
 the circuit is out of scope for Wave 1.
 
-**Enforced by:** every off-chain publisher (worker derives the id from the
-fetched dispute record — the caller-supplied id is never trusted; gateway
-re-checks before constructing the transaction; verification UI re-checks) and
-by the contract tests, which pin the publisher rule and prove a mismatched
-payload never reaches the ledger
+**Enforced by:** the SDK (`sdk/src/publish.ts` — the single gate every
+publisher must pass; tested in `sdk/test/publish.test.ts`, which proves the
+contract circuit is not invoked on mismatch), plus defense in depth by every
+off-chain publisher (worker derives the id from the fetched dispute record —
+the caller-supplied id is never trusted; gateway re-checks before constructing
+the transaction; verification UI re-checks) and by the contract tests, which
+pin the publisher rule and prove a mismatched payload never reaches the ledger
 (`contract/src/test/security.test.ts`, "Attack 6").

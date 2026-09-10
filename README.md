@@ -28,7 +28,7 @@ Frontend ──▶ Midnight (Compact contract) ──▶ TS Gateway ──▶ Go
 | ---------- | ----------------------------------------------------------------------- |
 | `contract/`| Compact contract (`disputevault.compact`) + simulator tests             |
 | `sdk/`     | Shared TS library: canonical JSON, wire format, commitments, encryption |
-| `gateway/` | TS HTTP service — the only Midnight-aware component (midnight-js 4.x)   |
+| `gateway/` | TS HTTP service - the only Midnight-aware component (midnight-js 4.x)   |
 | `worker/`  | Go adjudication worker (decrypt → validate → adjudicate → publish)      |
 | `frontend/`| Vite + React + TS + Tailwind DApp with verification UI                  |
 | `docs/`    | PROPOSAL · PROTOCOL · ARCHITECTURE · SECURITY                           |
@@ -87,7 +87,7 @@ See `docs/ARCHITECTURE.md` §6 for the full local stack description.
 Authorization uses the official Midnight **hash-based authentication**
 pattern (`persistentHash` over a witness-provided secret compared against an
 authority bound at deployment). `ownPublicKey()` is never used for
-authorization — per the current Midnight security documentation.
+authorization - per the current Midnight security documentation.
 
 ## Security
 
@@ -109,10 +109,10 @@ Copy `.env.example` to `.env` (per workspace as needed) and fill in secrets.
 
 ## Documentation
 
-- `docs/PROPOSAL.md` — problem, solution, vision, roadmap
-- `docs/PROTOCOL.md` — exact wire formats, canonicalization, commitments
-- `docs/ARCHITECTURE.md` — layers, boundaries, repository layout
-- `docs/SECURITY.md` — threat model, attacks, trust assumptions
+- `docs/PROPOSAL.md` - problem, solution, vision, roadmap
+- `docs/PROTOCOL.md` - exact wire formats, canonicalization, commitments
+- `docs/ARCHITECTURE.md` - layers, boundaries, repository layout
+- `docs/SECURITY.md` - threat model, attacks, trust assumptions
 
 ## License
 

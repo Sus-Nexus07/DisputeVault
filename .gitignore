@@ -23,6 +23,10 @@ worker/bin/
 # Local state
 .midnight-state.json
 *.local
+.gateway-state/
+
+# testkit-js logger artifacts (written when its modules are imported)
+gateway/logs/
 
 # Editors / OS
 .vscode/

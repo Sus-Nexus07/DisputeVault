@@ -1,0 +1,29 @@
+{
+  "name": "@disputevault/gateway",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DisputeVault TS gateway - the ONLY component that talks directly to the Midnight network (midnight-js 4.x providers)",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "node --experimental-strip-types --watch src/server.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@disputevault/sdk": "file:../sdk",
+    "@midnight-ntwrk/midnight-js": "4.1.1",
+    "@midnight-ntwrk/testkit-js": "4.1.1",
+    "fastify": "^5.2.1",
+    "pino": "^10.3.1"
+  },
+  "devDependencies": {
+    "@midnight-ntwrk/compact-runtime": "0.16.0",
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
